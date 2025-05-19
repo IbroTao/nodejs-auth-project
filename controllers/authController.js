@@ -1,6 +1,7 @@
 const { signupSchema, loginSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
 const User = require("../models/usersModel.js");
-const { hashPassword } = require("../utilis/hash.js");
+const { hashPassword, hashPasswordValidation } = require("../utilis/hash.js");
+const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
     const { email, password } = req.body;
@@ -46,9 +47,20 @@ exports.login = async(req, res) => {
         }
 
         const exisitingUser = await User.findOne({email}).select('+password');
-        if(!existingUser) {
+        if(!exisitingUser) {
             return res.status(401).json({success: false, message: "User does not exist!"})
         }
+
+        const result = await hashPasswordValidation(password, exisitingUser.password);
+        if(!result) {
+            return res.status(401).json({success: false, message: "Invalid credentials!"})
+        }
+
+        const token = jwt.sign({
+            userId: exisitingUser._id,
+            email: exisitingUser.email,
+            verified: exisitingUser.verified
+        })
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
