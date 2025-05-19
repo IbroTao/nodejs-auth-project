@@ -85,3 +85,11 @@ exports.login = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
+
+exports.logout = async(req, res) => {
+    res.clearCookie('Authorization').status(200).json({sucess: true, message: "Logged out"})
+}
+
+exports.sendVerificationCode = async(req, res) => {
+    const {email} = req.body;
+}
