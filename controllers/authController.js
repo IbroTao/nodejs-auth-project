@@ -38,29 +38,48 @@ exports.signup = async (req, res) => {
     }
 };
 
-exports.login = async(req, res) => {
-    const {email, password} = req.body;
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
     try {
-        const {error} = loginSchema.validate({email, password});
-        if(error) {
-            return res.status(401).json({success: false, message: error.details[0]})
+        console.log("Login attempt:", email);
+
+        const { error } = loginSchema.validate({ email, password });
+        if (error) {
+            console.log("Validation error:", error.details[0]);
+            return res.status(401).json({ success: false, message: error.details[0] });
         }
 
-        const exisitingUser = await User.findOne({email}).select('+password');
-        if(!exisitingUser) {
-            return res.status(401).json({success: false, message: "User does not exist!"})
+        const exisitingUser = await User.findOne({ email }).select('+password');
+        if (!exisitingUser) {
+            console.log("User does not exist");
+            return res.status(401).json({ success: false, message: "User does not exist!" });
         }
 
         const result = await hashPasswordValidation(password, exisitingUser.password);
-        if(!result) {
-            return res.status(401).json({success: false, message: "Invalid credentials!"})
+        if (!result) {
+            console.log("Invalid password");
+            return res.status(401).json({ success: false, message: "Invalid credentials!" });
         }
 
         const token = jwt.sign({
             userId: exisitingUser._id,
             email: exisitingUser.email,
             verified: exisitingUser.verified
-        })
+        }, process.env.JWT_SECRET);
+
+        res.cookie('Authorization', `Bearer ${token}`, {
+            expires: new Date(Date.now() + 8 * 3600000),
+            httpOnly: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'production'
+        });
+
+        console.log("Login successful");
+        return res.status(200).json({
+            success: true,
+            token,
+            message: "Login successfully"
+        });
+
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
