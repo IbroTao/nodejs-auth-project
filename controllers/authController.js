@@ -51,8 +51,7 @@ exports.login = async (req, res) => {
 
         const exisitingUser = await User.findOne({ email }).select('+password');
         if (!exisitingUser) {
-            console.log("User does not exist");
-            return res.status(401).json({ success: false, message: "User does not exist!" });
+            res.status(404).json({ success: false, message: "User does not exist!" });
         }
 
         const result = await hashPasswordValidation(password, exisitingUser.password);
@@ -87,9 +86,17 @@ exports.login = async (req, res) => {
 }
 
 exports.logout = async(req, res) => {
-    res.clearCookie('Authorization').status(200).json({sucess: true, message: "Logged out"})
+    res.clearCookie('Authorization').status(200).json({sucess: true, message: "Logged out!"})
 }
 
 exports.sendVerificationCode = async(req, res) => {
     const {email} = req.body;
+    try {
+        const exisitingUser = await User.findOne({ email });
+        if (!exisitingUser) {
+            res.status(404).json({ success: false, message: "User does not exist!" });
+        }   
+    } catch (error) {
+        console.error(error);
+    }
 }
