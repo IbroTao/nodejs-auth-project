@@ -1,3 +1,4 @@
+const transport = require("../middlewares/sendMail.js");
 const { signupSchema, loginSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
 const User = require("../models/usersModel.js");
 const { hashPassword, hashPasswordValidation } = require("../utilis/hash.js");
@@ -99,6 +100,15 @@ exports.sendVerificationCode = async(req, res) => {
         if(exisitingUser.verified){
             return res.json({sucess: false, message: "You are already verified!"})
         }
+
+
+        const codeValue = Math.floor(Math.random() * 1000000).toString();
+        let info = transport.sendMail({
+            from: process.env.CODE_SENDING_EMAIL_ADDRESS,
+            to: exisitingUser.email,
+            subject: "Verification Code",
+            html: '<h1>' + codeValue + '</h1>'
+        })
     } catch (error) {
         console.error(error);
     }
