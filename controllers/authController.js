@@ -96,6 +96,9 @@ exports.sendVerificationCode = async(req, res) => {
         if (!exisitingUser) {
             res.status(404).json({ success: false, message: "User does not exist!" });
         }   
+        if(exisitingUser.verified){
+            return res.json({sucess: false, message: "You are already verified!"})
+        }
     } catch (error) {
         console.error(error);
     }
