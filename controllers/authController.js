@@ -109,6 +109,10 @@ exports.sendVerificationCode = async(req, res) => {
             subject: "Verification Code",
             html: '<h1>' + codeValue + '</h1>'
         })
+
+        if(info.accepted[0] === exisitingUser.email){
+            
+        }
     } catch (error) {
         console.error(error);
     }
