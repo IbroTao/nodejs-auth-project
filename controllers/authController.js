@@ -1,7 +1,7 @@
 const transport = require("../middlewares/sendMail.js");
 const { signupSchema, loginSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
 const User = require("../models/usersModel.js");
-const { hashPassword, hashPasswordValidation } = require("../utilis/hash.js");
+const { hashPassword, hashPasswordValidation, hmacProcess } = require("../utilis/hash.js");
 const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
@@ -93,11 +93,11 @@ exports.logout = async(req, res) => {
 exports.sendVerificationCode = async(req, res) => {
     const {email} = req.body;
     try {
-        const exisitingUser = await User.findOne({ email });
-        if (!exisitingUser) {
+        const existingUser = await User.findOne({ email });
+        if (!existingUser) {
             res.status(404).json({ success: false, message: "User does not exist!" });
         }   
-        if(exisitingUser.verified){
+        if(existingUser.verified){
             return res.json({sucess: false, message: "You are already verified!"})
         }
 
@@ -105,14 +105,19 @@ exports.sendVerificationCode = async(req, res) => {
         const codeValue = Math.floor(Math.random() * 1000000).toString();
         let info = transport.sendMail({
             from: process.env.CODE_SENDING_EMAIL_ADDRESS,
-            to: exisitingUser.email,
+            to: existingUser.email,
             subject: "Verification Code",
             html: '<h1>' + codeValue + '</h1>'
         })
 
         if(info.accepted[0] === exisitingUser.email){
-            
+            const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
+            existingUser.verificationCode = hashedCodeValue;
+            existingUser.verificationCodeValidation = Date.now();
+            await existingUser.save();
+            return res.status(200).json({sucess: true, message: "Verification code sent!"})
         }
+        res.status(400).json({success: false, message: "Code sent failed!"})
     } catch (error) {
         console.error(error);
     }
