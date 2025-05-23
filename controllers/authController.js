@@ -90,35 +90,43 @@ exports.logout = async(req, res) => {
     res.clearCookie('Authorization').status(200).json({sucess: true, message: "Logged out!"})
 }
 
-exports.sendVerificationCode = async(req, res) => {
-    const {email} = req.body;
+exports.sendVerificationCode = async (req, res) => {
+    const { email } = req.body;
     try {
         const existingUser = await User.findOne({ email });
         if (!existingUser) {
-            res.status(404).json({ success: false, message: "User does not exist!" });
-        }   
-        if(existingUser.verified){
-            return res.json({sucess: false, message: "You are already verified!"})
+            return res.status(404).json({ success: false, message: "User does not exist!" });
         }
 
+        if (existingUser.verified) {
+            return res.json({ success: false, message: "You are already verified!" });
+        }
 
-        const codeValue = Math.floor(Math.random() * 1000000).toString();
-        let info = transport.sendMail({
+        const codeValue = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+
+        let info = await transport.sendMail({
             from: process.env.CODE_SENDING_EMAIL_ADDRESS,
             to: existingUser.email,
             subject: "Verification Code",
             html: '<h1>' + codeValue + '</h1>'
-        })
+        });
 
-        if(info.accepted[0] === exisitingUser.email){
+        if (info.accepted && info.accepted[0] === existingUser.email) {
             const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
             existingUser.verificationCode = hashedCodeValue;
             existingUser.verificationCodeValidation = Date.now();
             await existingUser.save();
-            return res.status(200).json({sucess: true, message: "Verification code sent!"})
+            return res.status(200).json({ success: true, message: "Verification code sent!" });
         }
-        res.status(400).json({success: false, message: "Code sent failed!"})
+
+        res.status(400).json({ success: false, message: "Code send failed!" });
+
     } catch (error) {
         console.error(error);
+        res.status(500).json({ success: false, message: "Server error!" });
     }
+}
+
+exports.verifyVerificationCode = async(req, res) => {
+    const {email, password} = req.body;
 }
