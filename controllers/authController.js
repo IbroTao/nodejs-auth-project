@@ -128,5 +128,10 @@ exports.sendVerificationCode = async (req, res) => {
 }
 
 exports.verifyVerificationCode = async(req, res) => {
-    const {email, password} = req.body;
+    const {email, providedCode} = req.body;
+    try {
+        
+    } catch (error) {
+        
+    }
 }

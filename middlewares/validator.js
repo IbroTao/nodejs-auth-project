@@ -27,3 +27,6 @@ exports.loginSchema = Joi.object({
         .required()
         .pattern(new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/))
 })
+
+
+exports.acceptCodeSchema = Joi.object({})
