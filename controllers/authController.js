@@ -3,7 +3,7 @@ const { signupSchema, loginSchema, acceptCodeSchema } = require("../middlewares/
 const User = require("../models/usersModel.js");
 const { hashPassword, hashPasswordValidation, hmacProcess } = require("../utilis/hash.js");
 const jwt = require("jsonwebtoken");
-x
+
 exports.signup = async (req, res) => {
     const { email, password } = req.body;
     try {
