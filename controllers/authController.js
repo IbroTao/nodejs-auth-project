@@ -14,11 +14,11 @@ exports.signup = async (req, res) => {
         }
 
         const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        if (existingUser) {  
             return res.status(401).json({ success: false, message: "User already exists!" });
         }
 
-        const passwordHashed = await hashPassword(password, 12);
+        // const passwordHashed = await hashPassword(password, 12);
 
         const newUser = new User({
             email,
