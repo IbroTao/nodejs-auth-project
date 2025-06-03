@@ -18,7 +18,7 @@ exports.signup = async (req, res) => {
             return res.status(401).json({ success: false, message: "User already exists!" });
         }
 
-        // const passwordHashed = await hashPassword(password, 12);
+        const passwordHashed = await hashPassword(password, 12);
 
         const newUser = new User({
             email,
