@@ -1,5 +1,5 @@
 const transport = require("../middlewares/sendMail.js");
-const { signupSchema, loginSchema, acceptCodeSchema, changePassswordSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
+const { signupSchema, loginSchema, acceptCodeSchema, changePassswordSchema, acceptForgotPasswordSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
 const User = require("../models/usersModel.js");
 const { hashPassword, hashPasswordValidation, hmacProcess } = require("../utilis/hash.js");
 const jwt = require("jsonwebtoken");
@@ -276,7 +276,7 @@ exports.sendForgotPasswordCode = async (req, res) => {
 exports.verifyForgotPassswordCode = async (req, res) => {
     const { email, providedCode, newPassword } = req.body;
     try {
-        const { error } = acceptCodeSchema.validate({ email, providedCode });
+        const { error } = acceptForgotPasswordSchema.validate({ email, providedCode });
         if (error) {
             console.log("Validation error:", error.details[0]);
             return res.status(401).json({ success: false, message: error.details[0].message });
@@ -284,7 +284,7 @@ exports.verifyForgotPassswordCode = async (req, res) => {
 
         const codeValue = providedCode?.toString(); // Ensure it's safely accessed
 
-        const existingUser = await User.findOne({ email }).select("+verificationCode +verificationCodeValidation");
+        const existingUser = await User.findOne({ email }).select("+forgotPasswordCode +forgotPasswordCodeValidation");
         if (!existingUser) {
             return res.status(404).json({ success: false, message: "User does not exist!" });
         }
