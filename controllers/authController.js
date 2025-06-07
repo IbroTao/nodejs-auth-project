@@ -305,9 +305,8 @@ exports.verifyForgotPassswordCode = async (req, res) => {
         const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
 
         if (hashedCodeValue === existingUser.forgotPasswordCode) {
-            existingUser.verified = true;
-            existingUser.verificationCode = undefined;
-            existingUser.verificationCodeValidation = undefined;
+            existingUser.forgotPasswordCode = undefined;
+            existingUser.forgotPasswordCodeValidation = undefined;
             await existingUser.save();
             return res.status(200).json({ success: true, message: "Your account has been verified!" });
         }
