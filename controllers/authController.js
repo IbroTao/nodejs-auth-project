@@ -1,5 +1,5 @@
 const transport = require("../middlewares/sendMail.js");
-const { signupSchema, loginSchema, acceptCodeSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
+const { signupSchema, loginSchema, acceptCodeSchema, changePassswordSchema } = require("../middlewares/validator.js"); // This is imported to ensure the req. body meets certain criteria
 const User = require("../models/usersModel.js");
 const { hashPassword, hashPasswordValidation, hmacProcess } = require("../utilis/hash.js");
 const jwt = require("jsonwebtoken");
@@ -202,5 +202,37 @@ exports.verifyVerificationCode = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+exports.changePassword = async(req, res) => {
+    const {userId, verified} = req.user;
+    const {oldPassword, newPassword} = req.body; 
+    try {
+        const { error } = changePassswordSchema.validate({ oldPassword, newPassword });
+        if (error) {
+            return res.status(401).json({ success: false, message: error.details[0].message });
+        }
+
+        if(!verified) {
+            return res.status(401).json({success: false, message: "You are not veriifed!"})
+        };
+
+    const existingUser = await User.findOne({_id: userId}).select('+verificationCode +verificationCodeValidation');
+    if(!existingUser) {
+        return res.status(401).json({success: false, message: "User does not exist!"})
+    };
+
+    const result = await hashPasswordValidation(newPassword, existingUser.password);
+    if(!result) {
+        return res.status(401).json({success: false, message: "Invalid credentials!"});
+    };
+
+    const hashedPassword = await hashPassword(newPassword, 12);
+    existingUser.password = hashedPassword;
+    await existingUser.save();
+    return res.status(200).json({success: success, message: "Password updated!"})
+    } catch (error) {
+        
     }
 }

@@ -28,6 +28,8 @@ router.post('/logout', authController.logout);
 
 router.patch('/send-verification-code', authController.sendVerificationCode);
 router.patch('/verify-verification-code', authController.verifyVerificationCode);
+router.patch('/change-password', authController.changePassword);
+
 
 
 module.exports = router;
