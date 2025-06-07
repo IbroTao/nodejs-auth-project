@@ -293,7 +293,7 @@ exports.verifyForgotPassswordCode = async (req, res) => {
             return res.status(400).json({ success: false, message: "You are already verified!" });
         }
 
-        if (!existingUser.verificationCode || !existingUser.verificationCodeValidation) {
+        if (!existingUser.forgotPasswordCodeCode || !existingUser.forgotPasswordCodeValidationCodeValidation) {
             return res.status(400).json({ success: false, message: "Something is wrong with the code" });
         }
 
