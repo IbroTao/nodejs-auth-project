@@ -4,6 +4,38 @@ const User = require("../models/usersModel.js");
 const { hashPassword, hashPasswordValidation, hmacProcess } = require("../utilis/hash.js");
 const jwt = require("jsonwebtoken");
 
+
+    /**
+     * @swagger
+     * /signup:
+     * post:
+     * summary: Register a new user
+     * tags: [Authentication]
+     * requestBody:
+     * required: true
+     * content:
+     * application/json:
+     * schema:
+     * $ref: '#/components/schemas/SignupRequest'
+     * responses:
+     * '201':
+     * description: User account created successfully.
+     * content:
+     * application/json:
+     * schema:
+     * type: object
+     * properties:
+     * success:
+     * type: boolean
+     * message:
+     * type: string
+     * result:
+     * $ref: '#/components/schemas/UserResponse'
+     * '401':
+     * description: Validation error or user already exists.
+     * '500':
+     * description: Internal server error.
+     */
 exports.signup = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -125,42 +157,50 @@ exports.sendVerificationCode = async (req, res) => {
     }
 }
 
-exports.verifyVerificationCode = async(req, res) => {
-    const {email, providedCode} = req.body;
+exports.verifyVerificationCode = async (req, res) => {
+    const { email, providedCode } = req.body;
+
     try {
         const { error } = acceptCodeSchema.validate({ email, providedCode });
         if (error) {
             console.log("Validation error:", error.details[0]);
-            return res.status(401).json({ success: false, message: error.details[0] });
-        } 
+            return res.status(401).json({ success: false, message: error.details[0].message });
+        }
 
-        const codeValue = providedCode.toString();
-        const existingUser = await User.findOne({email}).select("+verificationCode +verificationCodeValidation");
+        const codeValue = providedCode?.toString(); // Ensure it's safely accessed
+
+        const existingUser = await User.findOne({ email }).select("+verificationCode +verificationCodeValidation");
         if (!existingUser) {
-            res.status(404).json({ success: false, message: "User does not exist!" });
-        }
-        if(existingUser.verified) {
-            return res.status(400).json({success: false, messsage: "You are already verified!"})
+            return res.status(404).json({ success: false, message: "User does not exist!" });
         }
 
-        if(!existingUser.verificationCode || !exisitingUser.verificationCodeValidation) {
-            return res.status(400).json({success: false, message: "Something is wromg with the code"})
+        if (existingUser.verified) {
+            return res.status(400).json({ success: false, message: "You are already verified!" });
         }
 
-        if(Date.now() - existingUser.verificationCodeValidation > 5*6*1000) {
-            return res.status(400).json({success: false, message: "the code has expired, try again!"})
+        if (!existingUser.verificationCode || !existingUser.verificationCodeValidation) {
+            return res.status(400).json({ success: false, message: "Something is wrong with the code" });
         }
-        
-        const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET)
-        if(hashedCodeValue === existingUser.verificationCode) {
+
+        // Check if code is expired
+        if (Date.now() - existingUser.verificationCodeValidation > 5 * 60 * 1000) {
+            return res.status(400).json({ success: false, message: "The code has expired, try again!" });
+        }
+
+        const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
+
+        if (hashedCodeValue === existingUser.verificationCode) {
             existingUser.verified = true;
             existingUser.verificationCode = undefined;
             existingUser.verificationCodeValidation = undefined;
             await existingUser.save();
-            return res.status(200).json({success: true, message: "Your account has been verified!"})
+            return res.status(200).json({ success: true, message: "Your account has been verified!" });
         }
-        return res.status(400),json({success: false, message: "An unexpected error occured!"})
-    }catch (error) {
+
+        return res.status(400).json({ success: false, message: "Invalid verification code!" });
+
+    } catch (error) {
         console.log(error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
 }

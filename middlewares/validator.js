@@ -37,5 +37,10 @@ exports.acceptCodeSchema = Joi.object({
         .email({
             tlds: {allow: ['com', 'net']}
         }),
-        providedCode: Joi.number()
+        providedCode: Joi.string().required()
+});
+
+
+exports.changePassswordSchema = Joi.object({
+    
 })

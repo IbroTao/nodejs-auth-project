@@ -3,11 +3,33 @@ const helmet = require('helmet');
 const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const { mongoConnection } = require('./configs/mongoConnect');
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc")
 
 const authRouter = require("./routers/authRouter.js")
 
+const options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "User Authencation API",
+            version: "1.0.0",
+            description: "API for user registration, login, logout, and email verification",
+        },
+        servers: [
+            {
+                url: "http://localhost:8000/api/auth",
+            },
+        ],
+        
+    },
+    apis: ["./routers/*.js"], 
+};
+const specs = swaggerJsDoc(options);
+
 const app = express();
 
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs))
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
