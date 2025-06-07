@@ -293,18 +293,18 @@ exports.verifyForgotPassswordCode = async (req, res) => {
             return res.status(400).json({ success: false, message: "You are already verified!" });
         }
 
-        if (!existingUser.forgotPasswordCodeCode || !existingUser.forgotPasswordCodeValidationCodeValidation) {
+        if (!existingUser.forgotPasswordCodeCode || !existingUser.forgotPasswordCodeValidation) {
             return res.status(400).json({ success: false, message: "Something is wrong with the code" });
         }
 
         // Check if code is expired
-        if (Date.now() - existingUser.verificationCodeValidation > 5 * 60 * 1000) {
+        if (Date.now() - existingUser.forgotPasswordCodeValidation > 5 * 60 * 1000) {
             return res.status(400).json({ success: false, message: "The code has expired, try again!" });
         }
 
         const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
 
-        if (hashedCodeValue === existingUser.verificationCode) {
+        if (hashedCodeValue === existingUser.forgotPasswordCode) {
             existingUser.verified = true;
             existingUser.verificationCode = undefined;
             existingUser.verificationCodeValidation = undefined;
