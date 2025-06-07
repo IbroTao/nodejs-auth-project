@@ -23,6 +23,6 @@ exports.identifier = (req, res, next) => {
             throw new Error("token error")
         }
     } catch (error) {
-        
+        return res.status(500).json({ success: false, message: "Failed" });
     }
 }
