@@ -276,7 +276,7 @@ exports.sendForgotPasswordCode = async (req, res) => {
 exports.verifyForgotPassswordCode = async (req, res) => {
     const { email, providedCode, newPassword } = req.body;
     try {
-        const { error } = acceptForgotPasswordSchema.validate({ email, providedCode });
+        const { error } = acceptForgotPasswordSchema.validate({ email, providedCode, newPassword });
         if (error) {
             console.log("Validation error:", error.details[0]);
             return res.status(401).json({ success: false, message: error.details[0].message });
@@ -305,10 +305,12 @@ exports.verifyForgotPassswordCode = async (req, res) => {
         const hashedCodeValue = hmacProcess(codeValue, process.env.HMAC_VERIFICATION_CODE_SECRET);
 
         if (hashedCodeValue === existingUser.forgotPasswordCode) {
+            const hashedPassword = await hashPassword(newPassword, 12);
+            existingUser.password = hashedPassword;
             existingUser.forgotPasswordCode = undefined;
             existingUser.forgotPasswordCodeValidation = undefined;
             await existingUser.save();
-            return res.status(200).json({ success: true, message: "Your account has been verified!" });
+            return res.status(200).json({ success: true, message: "Password updated!" });
         }
 
         return res.status(400).json({ success: false, message: "Invalid verification code!" });
