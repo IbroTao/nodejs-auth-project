@@ -1,17 +1,20 @@
-const {createHmac} = require("crypto")
-const { hash, compare } = require("bcryptjs")
+// utils/hash.js
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto'); // Built-in Node.js module
 
-exports.hashPassword = (value, saltValue) => {
-    const result = hash(value, saltValue);
-    return result;
-}
+// Hashes a password using bcrypt
+exports.hashPassword = async (password, saltRounds) => {
+    return await bcrypt.hash(password, saltRounds);
+};
 
-exports.hashPasswordValidation = (value, hashedValue) => {
-    const result = compare(value, hashedValue);
-    return result;
-}
+// Validates a plain password against a hashed password
+exports.hashPasswordValidation = async (plainPassword, hashedPassword) => {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+};
 
-exports.hmacProcess = (value, key) => {
-    const result = createHmac('sha256', key).update(value).digest('hex');
-    return result;
-}
+// Creates an HMAC hash for sensitive data like verification codes
+exports.hmacProcess = (data, secret) => {
+    return crypto.createHmac('sha256', secret)
+                .update(data)
+                .digest('hex');
+};
