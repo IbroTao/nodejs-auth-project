@@ -12,13 +12,13 @@ const options = {
     definition: {
         openapi: "3.0.0",
         info: {
-            title: "User Authencation API",
+            title: "Authencation API",
             version: "1.0.0",
             description: "API for user registration, login, logout, and email verification",
         },
         servers: [
             {
-                url: "http://localhost:8000/api/auth",
+                url: "http://localhost:3000/api",
             },
         ],
         
